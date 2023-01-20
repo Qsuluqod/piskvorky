@@ -4,8 +4,14 @@ from math import inf
 
 class Node:
 
-    def __init__(self, symbol, row, col, ext):
-
+    def __init__(self, symbol: str, row: int, col: int, ext: int):
+        """
+        Vygeneruje nové políčko
+        :param symbol: symbol políčka
+        :param row: řádek, v němž se políčko nachází
+        :param col: sloupec, v němž se políčko nachází
+        :param ext: rozměr hrací desky
+        """
         self.symbol = symbol
         self.row = row
         self.col = col
@@ -21,35 +27,37 @@ class Node:
 
 class Board:
 
-
     def __init__(self, game):
 
         """
-        :param ext: rozměr pole
-        :param empty: prázdný znak
+        :param game: hra, v jaké se deska nachází
         """
         self.game = game
         self.ext = game.ext
+        ext = self.ext
         self.X = game.X
         self.O = game.O
         self.empty = game.empty
+        self.win_count = game.win_count
 
-        self.space = ext**2
+        # volné místo na šachovnici
+        self.space = ext ** 2
 
-        # Kládné - vyhrává kolečko, záporné - vyhrává křížek
-        self.score = None
+        # kladné - vyhrává kolečko, záporné - vyhrává křížek
+        self.score = 0
 
         # hrací pole
         self.field = [[Node(self.empty, row, col, ext) for col in range(ext)] for row in range(ext)]
+        # relevantní políčka desky (ty v rozumné vzdálenosti od již položených políček)
         self.relevant = set()
 
-        # vytvoření transpozici hracího pole
+        # vytvoření transpozice hracího pole
         self.transposition = [[None for _ in range(ext)] for _ in range(ext)]
         for x in range(ext):
             for y in range(ext):
                 self.transposition[x][y] = self.field[y][x]
 
-        # vytvoří diagonální reprezentace hracího pole
+        # vytvoří diagonálních reprezentací hracího pole
         self.diagonal = [[] for _ in range(ext * 2 - 1)]  # /
         self.rev_diagonal = [[] for _ in range(ext * 2 - 1)]  # \
 
@@ -64,7 +72,9 @@ class Board:
                 col += 1
                 rev_row += 1
 
+        self.fields = [self.field, self.transposition, self.diagonal, self.rev_diagonal]
 
+        # vytvoření horní lišty, pro tisknutí herní desky do konzole
         self.alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:ext])
         self.headline = "  |"
         for seq, letter in enumerate(self.alphabet):
@@ -100,10 +110,17 @@ class Board:
 
         return self.field
 
-    def add_symbol(self, row, col, symbol):
+    def add_symbol(self, row: int, col: int, symbol: str) -> None:
 
+        """
+        Přidá na desku symbol
+        :param row: řádek, na nějž přidá symbol
+        :param col: sloupec, na nějž přidá symbol
+        :param symbol: symbol, jenž přidá
+        :return:
+        """
         if self.field[row][col].symbol != self.empty:
-            raise "Symbol má být položen na již obsazené místo"
+            raise Exception("Symbol má být položen na již obsazené místo")
 
         self.field[row][col].symbol = symbol
         self.relevant.discard(self.field[row][col])
@@ -117,9 +134,17 @@ class Board:
                     self.relevant.add(self.field[r][c])
         self.space -= 1
 
-    def win_condition_for_one_new(self, node: Node, player: bool, length: int):
+    def win_condition_for_one_new(self, node: Node, player: bool, length: int) -> bool:
 
+        """
+        Zjistí jestli hráč nevyhrál v okolí jednoho políčka
+        :param node: políčko, okolo kterého kontrolujeme
+        :param player: hráč, pro kterého zjišťujeme, jestli nevyhrál
+        :param length: požadovaná délka výherní řady symbolů
+        :return: True nebo False podle toho, jestli hráč vyhrál
+        """
         symbol = self.O if player else self.X
+        # hledaný řetězec
         wanted = symbol * length
         parts = [self.field[node.row], self.transposition[node.col],
                  self.diagonal[node.diagonal], self.rev_diagonal[node.rev_diagonal]]
@@ -132,31 +157,80 @@ class Board:
             self.score = inf if player else -inf
         return res
 
-    def win_condition(self, player: bool, length: int):
+    def win_condition(self, player: bool, length: int) -> bool:
 
+        """
+        Zjistí jestli jeden z hráču nevyhrál kdekoliv na desce
+        :param player: hráč, pro kterého zjišťujeme, jestli nevyhrál
+        :param length: požadovaná délka výherní řady symbolů
+        :return: True nebo False podle toho, jestli hráč vyhrál
+        """
         symbol = self.O if player else self.X
         wanted = symbol * length
-        res = self.win_condition_in_field(wanted, self.field) \
-              or self.win_condition_in_field(wanted, self.transposition) \
-              or self.win_condition_in_field(wanted, self.diagonal) \
-              or self.win_condition_in_field(wanted, self.rev_diagonal)
+        res = False
+        for field in self.fields:
+            res = res or self.win_condition_in_field(wanted, field)
 
         if res:
             self.score = inf if player else -inf
         return res
 
-    def calculate_score_for_one_new(self, node: Node, ):
-
-    def calculate_score(self):
+    def calculate_score_for_one_new(self, node: Node) -> float:
 
         pass
 
-    def calculate_for_player(self, player):
+    def calculate_score(self) -> float:
 
-        symbol = self.O if player else sel
+        if self.win_condition(True, self.win_count):
+            self.score = inf
+            return inf
+        if self.win_condition(False, self.win_count):
+            self.score = -inf
+            return -inf
 
-    def compare(self, board):
+        self.score += self.calculate_for_player(True)
+        self.score -= self.calculate_for_player(False)
+        return self.score
 
+    def calculate_for_player(self, player) -> float:
+
+        res = 0
+        for field in self.fields:
+            res += self.calculate_for_field(field, player)
+        return res
+
+    def calculate_for_field(self, field, player) -> float:
+
+        res = 0
+        for part in field:
+            res += self.calculate_for_part(part, player)
+        return res
+
+    def calculate_for_part(self, part, player) -> float:
+
+        cur = self.O if player else self.X
+        streak = 0
+        offset = 0
+        res = 0
+        for node in part:
+            if node.symbol == cur:
+                streak += 1
+            elif node.symbol == self.empty:
+                offset += 1
+            else:
+                streak = 0
+                offset = 0
+            if streak + offset >= self.win_count:
+                res += streak
+        return res
+
+    def compare(self, board) -> bool:
+
+        """
+        porovná hodnoty symbolů všech svých políček se symbolu jejich ekvivalentů na jiné desce
+        :param board: deska se kterou se porovnává
+        :return: True nebo False podle výsledku
+        """
         for x in range(ext):
             for y in range(ext):
                 if self.field[x][y].symbol != board.field[x][y].symbol:
@@ -173,6 +247,10 @@ class Board:
 
     def sample_field(self):
 
+        """
+        Funkce je určená pouze pro debugování
+        :return:
+        """
         for i in range(self.ext):
             for j in range(self.ext):
                 self.field[i][j].symbol = str(i * 100 + j)
@@ -180,9 +258,9 @@ class Board:
 
 class MiniMax:
 
-    def __init__(self, game, spread: int, max_depth: int, debug=False):
+    def __init__(self, parent_game, max_depth: int, debug = False):
 
-        self.game = game
+        self.game = parent_game
         self.ext = self.game.ext
         self.empty = self.game.empty
         self.X = self.game.X
@@ -191,13 +269,91 @@ class MiniMax:
 
         self.board = self.game.board
         self.layers = [[] for _ in range(self.ext ** 2 + 1)]
-        self.layers[0].append(Board(self.ext, self.empty))
+        self.layers[0].append(Board(self.game))
 
-        self.spread = spread
+        # self.spread = spread
         self.max_depth = max_depth
         self.debug = debug
 
     def choose_option(self, player: bool):
+
+        cur = self.O if player else self.X
+        options = list(self.board.relevant)
+        if len(options) == 0:
+            return self.ext // 2, self.ext // 2
+
+        res = [options[0].row, options[0].col]
+        if len(options) == 1:
+            return res[0], res[1]
+
+        best_eval = -inf if player else inf
+        alpha = -inf
+        beta = inf
+        for seq, option in enumerate(options):
+            new_board = deepcopy(self.board)
+            new_board.add_symbol(option.row, option.col, cur)
+
+            if new_board.win_condition_for_one_new(option, cur, self.win_count):
+                # self.layers[self.game.depth + 1].append(new_board)
+                return option.row, option.col
+
+            outcome = self.proceed_option(1, new_board, player, not player, alpha, beta)
+
+            if player:
+                alpha = max(alpha, outcome)
+                if best_eval < outcome:
+                    res = [option.row, option.col]
+            else:
+                beta = min(beta, outcome)
+                if best_eval > outcome:
+                    res = [option.row, option.col]
+            if beta <= alpha:
+                break
+
+        return res[0], res[1]
+
+    def proceed_option(self, cur_depth: int, board: Board, ref: bool, switch: bool, alpha: int, beta: int) -> float:
+
+        """
+        :param cur_depth: aktuální hloubka ponoření minimaxu
+        :param board: aktuální deska
+        :param ref: hráč (referent) pro kterého kalkulujeme tah (True - kolečeko, False - křížek)
+        :param switch: jaký hráč zrovna ve stromu táhne (True - kolečko, False - křížek)
+        :param alpha: alfa
+        :param beta: beta
+        :return: hodnota uzlu
+        """
+        if cur_depth >= self.max_depth:
+            return board.calculate_score()
+
+        relevant = list(board.relevant)
+        if len(relevant) == 0:
+            return board.calculate_score()
+
+        cur = self.O if switch else self.X
+        best_eval = -inf if switch else inf
+
+        for node in relevant:
+            new_board = deepcopy(board)
+            new_board.add_symbol(node.row, node.col, cur)
+
+            if new_board.win_condition_for_one_new(node, cur, self.win_count):
+                return inf if switch else -inf
+
+            outcome = self.proceed_option(cur_depth + 1, new_board, ref, switch, alpha, beta)
+
+            if switch:
+                best_eval = max(best_eval, outcome)
+                alpha = max(alpha, outcome)
+            else:
+                best_eval = min(best_eval, outcome)
+                beta = min(beta, outcome)
+            if beta <= alpha:
+                break
+
+        return best_eval
+
+    def choose_option_fully(self, player: bool):
 
         cur = self.O if player else self.X
         print("STARTED CHOOSING OPTION FOR {}".format(cur))
@@ -252,7 +408,7 @@ class MiniMax:
 
         return res[0], res[1]
 
-    def proceed_option(self, cur_depth: int, board: Board, ref: str, switch: bool):
+    def proceed_option_fully(self, cur_depth: int, board: Board, ref: str, switch: bool):
 
         if cur_depth >= self.max_depth:
             return 0
@@ -261,13 +417,14 @@ class MiniMax:
         opp = self.X if switch else self.O
 
         if self.debug:
-            print("    " + "    " * cur_depth + "testing suboption number {} for {}".format(self.game.depth + cur_depth, cur))
+            print("    " + "    " * cur_depth + "testing suboption number {} for {}".format(self.game.depth + cur_depth,
+                                                                                            cur))
             print(board)
 
         relevant = list(board.relevant)
         if len(relevant) == 0:
             return 0
-        
+
         outcomes = []
         for node in relevant:
             # vytvoří novou desku a položí na ní symbol
@@ -312,21 +469,30 @@ class MiniMax:
 
 class Game:
 
-    def __init__(self, ext: int, win_count: int, spread: int, minimax_depth: int, debug: bool):
+    def __init__(self, _ext: int, _win_count: int, _minimax_depth: int, _debug: bool):
 
         # True = O, False = X
         self.switch = True
-        self.ext = ext
-        self.win_count = win_count
+        self.ext = _ext
+        self.win_count = _win_count
         self.depth = 0
 
         self.X = "X"
         self.O = "O"
         self.empty = " "
 
-        self.board = Board(ext, self.empty)
         self.debug = debug
-        self.minimax = MiniMax(self, spread, minimax_depth, debug=debug)
+
+        self.board = Board(self)
+        self.minimax_depth = _minimax_depth
+        self.minimax = MiniMax(self, _minimax_depth, debug = _debug)
+
+    def clean(self):
+
+        self.switch = True
+        self.depth = 0
+        self.board = Board(self)
+        self.minimax = MiniMax(self, self.minimax_depth, debug = debug)
 
     def player_turn(self, symbol: str):
 
@@ -365,7 +531,7 @@ class Game:
             cur = self.O if self.switch else self.X
             row, col = self.player_turn(cur)
             self.board.add_symbol(row, col, cur)
-            if self.check_end(cur):
+            if self.check_end():
                 break
             self.end_turn()
 
@@ -377,11 +543,11 @@ class Game:
             cur = self.O if self.switch else self.X
             row, col = self.minimax.choose_option(self.switch)
             self.board.add_symbol(row, col, cur)
-            if self.check_end(cur):
+            if self.check_end():
                 break
             self.end_turn()
 
-    def play_with_ai(self, ai_starts=True):
+    def play_with_ai(self, ai_starts = True):
 
         self.switch = True
         while True:
@@ -401,7 +567,7 @@ class Game:
 
             self.board.add_symbol(row, col, cur)
 
-            if self.check_end(cur):
+            if self.check_end():
                 break
             self.end_turn()
 
@@ -412,7 +578,7 @@ class Game:
             print(self.board)
             row, col = self.player_turn(self.O)
             self.board.add_symbol(row, col, self.O)
-            if self.check_end(self.O):
+            if self.check_end():
                 break
             self.depth += 1
 
@@ -420,16 +586,13 @@ class Game:
 
         self.switch = not self.switch
         self.depth += 1
-        print(self.depth)
-        for board in self.minimax.layers[self.depth]:
-            #print(board)
-            pass
 
-    def check_end(self, symbol):
+    def check_end(self):
 
-        if self.board.win_condition(symbol, self.win_count):
+        cur = self.O if self.switch else self.X
+        if self.board.win_condition(self.switch, self.win_count):
             print(self.board)
-            print("Hráč {} vyhrál".format(symbol))
+            print("Hráč {} vyhrál".format(cur))
             return True
         if self.board.space == 0:
             print(self.board)
@@ -442,11 +605,28 @@ class Game:
         return self.board.__str__()
 
 
-ext = 15
-win_count = 4
-spread = 1
-minimax_depth = 4
+ext = 3
+win_count = 3
+minimax_depth = 20
 debug = False
 
-game = Game(ext, win_count, spread, minimax_depth, debug)
-game.play_ai_vs_ai()
+game = Game(ext, win_count, minimax_depth, debug)
+while True:
+    game_mode = input("Vyber, jakým způsobem chceš hrát:\n"
+                      "1 - hráč proti hráči\n2 - hráč sám se sebou\n"
+                      "3 - hráč proti počátači (začíná počítač)\n"
+                      "4 - hráč proti počítači (začíná hráč)\n"
+                      "5 - počítač proti počítači\n__: ")
+    if game_mode == "1":
+        game.play()
+    elif game_mode == "2":
+        game.play_without_switch()
+    elif game_mode == "3":
+        game.play_with_ai()
+    elif game_mode == "4":
+        game.play_with_ai(ai_starts = False)
+    elif game_mode == "5":
+        game.play_ai_vs_ai()
+    else:
+        print("Zadal si asi něco špatně, zkus to znovu")
+    game.clean()
