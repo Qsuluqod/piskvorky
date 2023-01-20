@@ -1,45 +1,47 @@
+from node import Node
+from math import inf
+
+
 class Board:
 
-
-    def __init__(self, game):
+    def __init__(self, parent_game):
 
         """
-        :param game: hra, v jaké se deska nachází
+        :param parent_game: hra, v jaké se deska nachází
         """
-        self.game = game
-        self.ext = game.ext
-        ext = self.ext
-        self.X = game.X
-        self.O = game.O
-        self.empty = game.empty
-        self.win_count = game.win_count
+        self.game = parent_game
+        self.ext = parent_game.ext
+        self.X = parent_game.X
+        self.O = parent_game.O
+        self.empty = parent_game.empty
+        self.win_count = parent_game.win_count
 
         # volné místo na šachovnici
-        self.space = ext**2
+        self.space = self.ext ** 2
 
         # kladné - vyhrává kolečko, záporné - vyhrává křížek
-        self.score = None
+        self.score = 0
 
         # hrací pole
-        self.field = [[Node(self.empty, row, col, ext) for col in range(ext)] for row in range(ext)]
+        self.field = [[Node(self.empty, row, col, self.ext) for col in range(self.ext)] for row in range(self.ext)]
         # relevantní políčka desky (ty v rozumné vzdálenosti od již položených políček)
         self.relevant = set()
 
         # vytvoření transpozice hracího pole
-        self.transposition = [[None for _ in range(ext)] for _ in range(ext)]
-        for x in range(ext):
-            for y in range(ext):
+        self.transposition = [[None for _ in range(self.ext)] for _ in range(self.ext)]
+        for x in range(self.ext):
+            for y in range(self.ext):
                 self.transposition[x][y] = self.field[y][x]
 
         # vytvoří diagonálních reprezentací hracího pole
-        self.diagonal = [[] for _ in range(ext * 2 - 1)]  # /
-        self.rev_diagonal = [[] for _ in range(ext * 2 - 1)]  # \
+        self.diagonal = [[] for _ in range(self.ext * 2 - 1)]  # /
+        self.rev_diagonal = [[] for _ in range(self.ext * 2 - 1)]  # \
 
-        for x in range(ext * 2 - 1):
-            row = min(x, ext - 1)
-            col = max(0, -ext + x + 1)
-            rev_row = max(ext - x - 1, 0)
-            for y in range(min(x + 1, ext * 2 - 1 - x)):
+        for x in range(self.ext * 2 - 1):
+            row = min(x, self.ext - 1)
+            col = max(0, -self.ext + x + 1)
+            rev_row = max(self.ext - x - 1, 0)
+            for y in range(min(x + 1, self.ext * 2 - 1 - x)):
                 self.diagonal[x].append(self.field[row][col])
                 self.rev_diagonal[x].append(self.field[rev_row][col])
                 row -= 1
@@ -49,7 +51,7 @@ class Board:
         self.fields = [self.field, self.transposition, self.diagonal, self.rev_diagonal]
 
         # vytvoření horní lišty, pro tisknutí herní desky do konzole
-        self.alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:ext])
+        self.alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:self.ext])
         self.headline = "  |"
         for seq, letter in enumerate(self.alphabet):
             space = "|" if (seq + 1) % 5 == 0 else " "
@@ -155,31 +157,23 @@ class Board:
 
     def calculate_score(self) -> float:
 
-        if self.win_condition(True, self.win_count):
-            self.score = inf
-            return inf
-        if self.win_condition(False, self.win_count):
-            self.score = -inf
-            return -inf
+        if self.space == 0:
+            return 0
+
         self.score += self.calculate_for_player(True)
         self.score -= self.calculate_for_player(False)
         return self.score
 
-    def calculate_for_player(self, player) -> float:
+    def calculate_for_player(self, player: bool) -> float:
 
         res = 0
         for field in self.fields:
-            res += self.calculate_for_field(field, player)
+            for part in field:
+                res += self.calculate_for_part(part, player)
+                res += self.calculate_for_part(reversed(part), player)
         return res
 
-    def calculate_for_field(self, field, player) -> float:
-
-        res = 0
-        for part in field:
-            res += self.calculate_for_part(part, player)
-        return res
-
-    def calculate_for_part(self, part, player) -> float:
+    def calculate_for_part(self, part, player: bool) -> float:
 
         cur = self.O if player else self.X
         streak = 0
@@ -188,8 +182,10 @@ class Board:
         for node in part:
             if node.symbol == cur:
                 streak += 1
+                offset = min(offset, 1)
             elif node.symbol == self.empty:
                 offset += 1
+                streak = min(streak, 5 - offset)
             else:
                 streak = 0
                 offset = 0
@@ -204,13 +200,13 @@ class Board:
         :param board: deska se kterou se porovnává
         :return: True nebo False podle výsledku
         """
-        for x in range(ext):
-            for y in range(ext):
+        for x in range(self.ext):
+            for y in range(self.ext):
                 if self.field[x][y].symbol != board.field[x][y].symbol:
                     return False
         return True
 
-    def win_condition_in_field(self, wanted, field) -> bool:
+    def win_condition_in_field(self, wanted: str, field) -> bool:
 
         for part in field:
             symbols = "".join([node.symbol for node in part])
