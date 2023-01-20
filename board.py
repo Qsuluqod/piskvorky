@@ -21,6 +21,7 @@ class Board:
 
         # kladné - vyhrává kolečko, záporné - vyhrává křížek
         self.score = 0.0
+        self.inherited_score = 0.0
 
         # hrací pole
         self.field = [[Node(self.empty, row, col, self.ext) for col in range(self.ext)] for row in range(self.ext)]
@@ -106,6 +107,12 @@ class Board:
             raise Exception("Symbol má být položen na již obsazené místo")
 
         self.field[row][col].symbol = symbol
+        self.space -= 1
+        self.manage_relevant(row, col)
+        self.manage_score(self.field[row][col])
+
+    def manage_relevant(self, row: int, col: int):
+
         self.relevant.discard(self.field[row][col])
 
         add_r = [-1, -1, -1, 0, 0, 1, 1, 1]
@@ -116,10 +123,8 @@ class Board:
             if 0 <= r < self.ext and 0 <= c < self.ext:
                 if self.field[r][c].symbol == self.empty:
                     self.relevant.add(self.field[r][c])
-        self.space -= 1
-        self.manage_score_for_node(self.field[row][col])
 
-    def manage_score_for_node(self, node: Node):
+    def manage_score(self, node: Node):
 
         if node.symbol == self.O:
             if self.win_condition_for_one_new(node, True):
@@ -139,8 +144,10 @@ class Board:
         for seq, part in enumerate(parts):
             index = indexes[seq]
             self.score -= self.field_score[seq][index]
+
             self.field_score[seq][index] = self.calculate_score_for_part(part, True)
             self.field_score[seq][index] -= self.calculate_score_for_part(part, False)
+
             self.score += self.field_score[seq][index]
 
     def win_condition_for_one_new(self, node: Node, player: bool) -> bool:
@@ -183,16 +190,6 @@ class Board:
         if res:
             self.score = inf if player else -inf
         return res
-
-    def calculate_score_for_node(self, node: Node) -> float:
-
-        parts = [self.field[node.row], self.transposition[node.col],
-                 self.diagonal[node.diagonal], self.rev_diagonal[node.rev_diagonal]]
-        score = 0
-        for seq, part in enumerate(parts):
-            score += self.calculate_score_for_part(part, True)
-            score -= self.calculate_score_for_part(part, False)
-        return score
 
     def calculate_score(self) -> float:
 

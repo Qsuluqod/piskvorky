@@ -15,6 +15,7 @@ class MiniMax:
         self.win_count = self.game.win_count
 
         self.board = self.game.board
+        self.layers: [[Board]]
         self.layers = [[] for _ in range(self.ext ** 2 + 1)]
         self.layers[0].append(Board(self.game))
 
@@ -42,6 +43,16 @@ class MiniMax:
 
             if abs(new_board.score) == inf:
                 return option.row, option.col
+
+            for layer_board in self.layers[self.game.depth + 1]:
+                if new_board.compare(layer_board):
+                    if layer_board.inherited_score == inf and player or\
+                            layer_board.inherited_score == -inf and not player:
+                        return option.row, option.col
+                    elif abs(layer_board.inherited_score) == inf:
+                        new_board = layer_board
+                    break
+
             boards.append((new_board, new_board.score, option))
 
         boards.sort(key = lambda x: x[1], reverse = player)
@@ -75,9 +86,11 @@ class MiniMax:
         :param beta: beta
         :return: hodnota uzlu
         """
+        # pokud hloubka zanoření minimaxu přetekla
         if cur_depth >= self.max_depth:
             return board.score
 
+        # vybere relevantní políčka z desky
         relevant = list(board.relevant)
         if len(relevant) == 0:
             return board.score
@@ -85,6 +98,7 @@ class MiniMax:
         cur = self.O if switch else self.X
         best_eval = -inf if switch else inf
 
+        # vytvoří všechny desky s variantami, kam může hráč položit políčko
         boards = []
         for node in relevant:
             new_board = deepcopy(board)
@@ -92,12 +106,24 @@ class MiniMax:
 
             if abs(new_board.score) == inf:
                 return new_board.score
+
+            for layer_board in self.layers[self.game.depth + cur_depth + 1]:
+                if new_board.compare(layer_board):
+                    if abs(layer_board.inherited_score) == inf:
+                        if layer_board.inherited_score == inf and switch:
+                            return inf
+                        elif layer_board.inherited_score == -inf and not switch:
+                            return -inf
+                    new_board = layer_board
+                    break
+
             boards.append((new_board, new_board.score))
 
+        # seřadí desky podle pravděpodobnosti výběru
         boards.sort(key = lambda x: x[1], reverse = switch)
 
-        for board, score in boards:
-            outcome = self.proceed_option(cur_depth + 1, board, not switch, alpha, beta)
+        for new_board, score in boards:
+            outcome = self.proceed_option(cur_depth + 1, new_board, not switch, alpha, beta)
 
             if switch:
                 best_eval = max(best_eval, outcome)
@@ -108,6 +134,9 @@ class MiniMax:
             if beta <= alpha:
                 break
 
+        if abs(best_eval) == inf:
+            board.inherited_score = best_eval
+            self.layers[self.game.depth + cur_depth].append(board)
         return best_eval
 
     def choose_option_fully(self, player: bool):
