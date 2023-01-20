@@ -20,7 +20,7 @@ class Board:
         self.space = self.ext ** 2
 
         # kladné - vyhrává kolečko, záporné - vyhrává křížek
-        self.score = 0
+        self.score = 0.0
 
         # hrací pole
         self.field = [[Node(self.empty, row, col, self.ext) for col in range(self.ext)] for row in range(self.ext)]
@@ -49,6 +49,13 @@ class Board:
                 rev_row += 1
 
         self.fields = [self.field, self.transposition, self.diagonal, self.rev_diagonal]
+
+        # na skore
+        self.field_score = [0 for _ in range(self.ext)]
+        self.transposition_score = [0 for _ in range(self.ext)]
+        self.diagonal_score = [0 for _ in range(2 * self.ext - 1)]
+        self.rev_diagonal_score = [0 for _ in range(2 * self.ext - 1)]
+        self.field_score = [self.field_score, self.transposition_score, self.diagonal_score, self.rev_diagonal_score]
 
         # vytvoření horní lišty, pro tisknutí herní desky do konzole
         self.alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:self.ext])
@@ -100,6 +107,7 @@ class Board:
 
         self.field[row][col].symbol = symbol
         self.relevant.discard(self.field[row][col])
+
         add_r = [-1, -1, -1, 0, 0, 1, 1, 1]
         add_c = [-1, 0, 1, -1, 1, -1, 0, 1]
         for i in range(len(add_r)):
@@ -109,8 +117,33 @@ class Board:
                 if self.field[r][c].symbol == self.empty:
                     self.relevant.add(self.field[r][c])
         self.space -= 1
+        self.manage_score_for_node(self.field[row][col])
 
-    def win_condition_for_one_new(self, node: Node, player: bool, length: int) -> bool:
+    def manage_score_for_node(self, node: Node):
+
+        if node.symbol == self.O:
+            if self.win_condition_for_one_new(node, True):
+                return
+        else:
+            if self.win_condition_for_one_new(node, False):
+                return
+
+        if self.space == 0:
+            self.score = 0
+            return
+
+        parts = [self.field[node.row], self.transposition[node.col],
+                 self.diagonal[node.diagonal], self.rev_diagonal[node.rev_diagonal]]
+        indexes = (node.row, node.col, node.diagonal, node.rev_diagonal)
+
+        for seq, part in enumerate(parts):
+            index = indexes[seq]
+            self.score -= self.field_score[seq][index]
+            self.field_score[seq][index] = self.calculate_score_for_part(part, True)
+            self.field_score[seq][index] -= self.calculate_score_for_part(part, False)
+            self.score += self.field_score[seq][index]
+
+    def win_condition_for_one_new(self, node: Node, player: bool) -> bool:
 
         """
         Zjistí jestli hráč nevyhrál v okolí jednoho políčka
@@ -121,7 +154,7 @@ class Board:
         """
         symbol = self.O if player else self.X
         # hledaný řetězec
-        wanted = symbol * length
+        wanted = symbol * self.win_count
         parts = [self.field[node.row], self.transposition[node.col],
                  self.diagonal[node.diagonal], self.rev_diagonal[node.rev_diagonal]]
         res = False
@@ -151,29 +184,40 @@ class Board:
             self.score = inf if player else -inf
         return res
 
-    def calculate_score_for_one_new(self, node: Node) -> float:
+    def calculate_score_for_node(self, node: Node) -> float:
 
-        pass
+        parts = [self.field[node.row], self.transposition[node.col],
+                 self.diagonal[node.diagonal], self.rev_diagonal[node.rev_diagonal]]
+        score = 0
+        for seq, part in enumerate(parts):
+            score += self.calculate_score_for_part(part, True)
+            score -= self.calculate_score_for_part(part, False)
+        return score
 
     def calculate_score(self) -> float:
 
         if self.space == 0:
             return 0
 
-        self.score += self.calculate_for_player(True)
-        self.score -= self.calculate_for_player(False)
+        self.score += self.calculate_score_for_player(True)
+        self.score -= self.calculate_score_for_player(False)
         return self.score
 
-    def calculate_for_player(self, player: bool) -> float:
+    def calculate_score_for_player(self, player: bool) -> float:
 
         res = 0
         for field in self.fields:
             for part in field:
-                res += self.calculate_for_part(part, player)
-                res += self.calculate_for_part(reversed(part), player)
+                res += self.calculate_score_for_part(part, player)
         return res
 
-    def calculate_for_part(self, part, player: bool) -> float:
+    def calculate_score_for_part(self, part, player: bool) -> float:
+
+        res = self.calculate_score_for_part_one_direction(part, player)
+        res += self.calculate_score_for_part_one_direction(reversed(part), player)
+        return res
+
+    def calculate_score_for_part_one_direction(self, part, player: bool) -> float:
 
         cur = self.O if player else self.X
         streak = 0
@@ -190,7 +234,7 @@ class Board:
                 streak = 0
                 offset = 0
             if streak + offset >= self.win_count:
-                res += streak
+                res += streak**2
         return res
 
     def compare(self, board) -> bool:

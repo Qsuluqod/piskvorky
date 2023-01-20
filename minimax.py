@@ -35,26 +35,34 @@ class MiniMax:
         best_eval = -inf if player else inf
         alpha = -inf
         beta = inf
+        boards = []
         for seq, option in enumerate(options):
             new_board = deepcopy(self.board)
             new_board.add_symbol(option.row, option.col, cur)
 
-            if new_board.win_condition_for_one_new(option, player, self.win_count):
+            if abs(new_board.score) == inf:
                 return option.row, option.col
+            boards.append((new_board, new_board.score, option))
 
-            outcome = self.proceed_option(1, new_board, not player, alpha, beta)
+        boards.sort(key = lambda x: x[1], reverse = player)
+
+        for board, score, option in boards:
+            outcome = self.proceed_option(1, board, not player, alpha, beta)
 
             if player:
                 alpha = max(alpha, outcome)
                 if best_eval < outcome:
+                    best_eval = outcome
                     res = [option.row, option.col]
             else:
                 beta = min(beta, outcome)
                 if best_eval > outcome:
+                    best_eval = outcome
                     res = [option.row, option.col]
             if beta <= alpha:
                 break
 
+        print("nejlepší dosažitelné skóre pro {}: {}".format(cur, best_eval))
         return res[0], res[1]
 
     def proceed_option(self, cur_depth: int, board: Board, switch: bool, alpha: int, beta: int) -> float:
@@ -62,30 +70,34 @@ class MiniMax:
         """
         :param cur_depth: aktuální hloubka ponoření minimaxu
         :param board: aktuální deska
-        :param ref: hráč (referent) pro kterého kalkulujeme tah (True - kolečeko, False - křížek)
         :param switch: jaký hráč zrovna ve stromu táhne (True - kolečko, False - křížek)
         :param alpha: alfa
         :param beta: beta
         :return: hodnota uzlu
         """
         if cur_depth >= self.max_depth:
-            return board.calculate_score()
+            return board.score
 
         relevant = list(board.relevant)
         if len(relevant) == 0:
-            return board.calculate_score()
+            return board.score
 
         cur = self.O if switch else self.X
         best_eval = -inf if switch else inf
 
+        boards = []
         for node in relevant:
             new_board = deepcopy(board)
             new_board.add_symbol(node.row, node.col, cur)
 
-            if new_board.win_condition_for_one_new(node, switch, self.win_count):
-                return inf if switch else -inf
+            if abs(new_board.score) == inf:
+                return new_board.score
+            boards.append((new_board, new_board.score))
 
-            outcome = self.proceed_option(cur_depth + 1, new_board, switch, alpha, beta)
+        boards.sort(key = lambda x: x[1], reverse = switch)
+
+        for board, score in boards:
+            outcome = self.proceed_option(cur_depth + 1, board, not switch, alpha, beta)
 
             if switch:
                 best_eval = max(best_eval, outcome)

@@ -1,9 +1,9 @@
 from game import Game
 
 
-extent = 3
-win_count = 3
-minimax_depth = 30
+extent = 15
+win_count = 5
+minimax_depth = 3
 
 game = Game(extent, win_count, minimax_depth)
 while True:
