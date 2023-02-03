@@ -1,8 +1,14 @@
 from game import Game
 
 
+"""
+Řídící struktura
+"""
+# rozměr pole
 extent = 5
+# počet políček v řadě nutných k vítězství
 win_count = 4
+# maximální zanoření minimaxu
 minimax_depth = 5
 
 game = Game(extent, win_count, minimax_depth)
@@ -19,9 +25,9 @@ while True:
     elif game_mode == "3":
         game.play_with_ai()
     elif game_mode == "4":
-        game.play_with_ai(ai_starts = False)
+        game.play_with_ai(ai_starts=False)
     elif game_mode == "5":
         game.play_ai_vs_ai()
     else:
-        print("Zadal si asi něco špatně, zkus to znovu")
+        print("Zadal jsi asi něco špatně, zkus to znovu")
     game.clean()

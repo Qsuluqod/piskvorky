@@ -7,6 +7,7 @@ class Board:
     def __init__(self, parent_game):
 
         """
+        Konstruktor nové desky.
         :param parent_game: hra, v jaké se deska nachází
         """
         self.game = parent_game
@@ -34,7 +35,7 @@ class Board:
             for y in range(self.ext):
                 self.transposition[x][y] = self.field[y][x]
 
-        # vytvoří diagonálních reprezentací hracího pole
+        # vytvoří diagonální reprezentace hracího pole
         self.diagonal = [[] for _ in range(self.ext * 2 - 1)]  # /
         self.rev_diagonal = [[] for _ in range(self.ext * 2 - 1)]  # \
 
@@ -51,12 +52,12 @@ class Board:
 
         self.fields = [self.field, self.transposition, self.diagonal, self.rev_diagonal]
 
-        # na skore
+        # vytvoří pole, kam se bude ukládat skóre jednotlivých
         self.field_score = [0 for _ in range(self.ext)]
         self.transposition_score = [0 for _ in range(self.ext)]
         self.diagonal_score = [0 for _ in range(2 * self.ext - 1)]
         self.rev_diagonal_score = [0 for _ in range(2 * self.ext - 1)]
-        self.field_score = [self.field_score, self.transposition_score, self.diagonal_score, self.rev_diagonal_score]
+        self.scores = [self.field_score, self.transposition_score, self.diagonal_score, self.rev_diagonal_score]
 
         # vytvoření horní lišty, pro tisknutí herní desky do konzole
         self.alphabet = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[:self.ext])
@@ -249,6 +250,12 @@ class Board:
 
     def win_condition_in_field(self, wanted: str, field) -> bool:
 
+        """
+        Zjistí, jestli se výherní kobinace nenachází v jednom poli.
+        :param wanted: hledaný řetězec
+        :param field:
+        :return:
+        """
         for part in field:
             symbols = "".join([node.symbol for node in part])
             if wanted in symbols:
@@ -258,7 +265,7 @@ class Board:
     def sample_field(self):
 
         """
-        Funkce je určená pouze pro debugování
+        Funkce je určená pouze pro debugování.
         :return:
         """
         for i in range(self.ext):
