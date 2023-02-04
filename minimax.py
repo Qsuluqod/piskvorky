@@ -10,7 +10,7 @@ class MiniMax:
     prořezávání.
 
     V self.layers se ukrývá něco jako historie průchodů, pokud nějaká deska nevyhnutelně vede k vítězství jedné
-    nebo druhé strany, uloží se příslušné vrstvy, tyto vrsty se pak porovnávají při průchodu minimaxem, aby minimax
+    nebo druhé strany, uloží se do příslušné vrstvy, tyto vrsty se pak porovnávají při průchodu minimaxem, aby minimax
     zbytečně nemusel nějaké desky vyhodnocovat vícekrát. Každé pole v self.layer odpovídá jedné vrstvě hry, takže
     na první pozici jsou desky, kde je právě zaplněno právě jedno pole, na druhé vrstvě jsou uloženy desky, kde jsou
     zaplněna právě dvě pole atd.
@@ -52,7 +52,7 @@ class MiniMax:
         algoritmu. Používá alfa beta prořezávání.
 
         Nejdříve vygeneruje všechny možné tahy podle výběru relevantních políček z dané desky. Následně je seřadí
-        dle jejich statického ohodnocení a v tomto pořadí na ně volá obdobnou rekurzivní funkci.
+        dle jejich statického ohodnocení a v tomto pořadí na ně volá obdobnou rekurzivní funkci self.proceed_option.
 
         :param player: hráč, pro jakého generujeme tah
         :return: souřadnice, které minimax vyhodnotil jako nejlepší
@@ -124,8 +124,14 @@ class MiniMax:
         """
         Rekurzivní funkce, která vyhodnocuje nejlepší možnost pro danou desku. Používá se alfa beta prořezávání.
 
-        Nejdříve vybere všechny relevantní možnosti, kam může táhnout z desky, poté je seřadí podle statického
-        ohodnocení desek a rekurzivně zavolá tuto funkci na každou možnost v pořadí, v jakém je seřadila.
+        Pokud dosáhla funkce svého maximálního zanoření, vrátí statické ohodnocení dané desky, jinak nejdříve vybere
+        všechny relevantní možnosti, kam může táhnout z desky, poté je seřadí podle statického ohodnocení desek a
+        rekurzivně zavolá tuto funkci na každou možnost v pořadí, v jakém je seřadila, hodnoty která získá z jejich
+        volání si ukládá. Zároveň pro každou desku, kterou vytvoří kontroluje, jestli už daná deska nebyla vyřešena v
+        historii.
+
+        Až bude mít ohodnocení všech desek, vrátí minimální nebo maximální hodnotu (dle toho, jaký hráč je na tahu)
+        z desek, na něž může táhnout.
 
         :param cur_depth: aktuální hloubka ponoření minimaxu
         :param board: aktuální deska, pro kterou vybíráme možnost

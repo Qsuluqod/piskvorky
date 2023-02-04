@@ -48,23 +48,23 @@ nevyhrál.</p>
 <p>Další důležitá struktura je self.relevant, tam jsou uložena políčka, která jsou v bezprostřední blízkosti již
 položených políček, tato struktura slouží k tomu, aby minimax nemusel zkoušet všechna políčka, ale pouze ta v
 bezprostřední blízkosti již položených políček. self.relevant je množina a ne seznam, což zaručuje, že minimax,
-pracující s toutu strukturou nebude deterministický, jelikož si tuto množinu převádí na seznam, což není
+pracující s toutu strukturou, nebude deterministický, jelikož si tuto množinu převádí na seznam, což není
 deterministické. Pokaždé když je přidáno nové políčko na desku, zavolá se funkce, která přehodnotí množinu
-relevantních políček.</p>
+relevantních políček self.relevant.</p>
 <p>Poslední důležitá struktura je skóre. Skóre má kladnou hodnotu pokud je deska výhodnější pro hráče O a zápornou,
-pokud je deska výhodnější pro hráče X. Pokud jeden hráč dosáhl absolutního vítězství na desce, je
-skóre desky nekončeno. Skóre se počítá pro každý sloupec, řádek, diagonálu a obrácenou diagonálu zvlášť (viz pole
-self.scores), po tom, co se přidá nové políčko, je zavolána funkce, která z celkového skóre odečte předešlé hodnoty
-skóre v polích, kde se nově přidavší políčko vyskytuje (řádku, sloupci, diagonále a obrácené diagonále), vypočítá
-nové hodnoty skóre v těch samých polích, načež je přičte k celkovému skóre.</p>
+pokud je deska výhodnější pro hráče X. Pokud jeden hráč dosáhl absolutního vítězství na desce, je skóre desky
+plus nebo mínus nekončeno. Skóre se počítá pro každý sloupec, řádek, diagonálu a obrácenou diagonálu zvlášť (viz
+pole self.scores), po tom, co se přidá nové políčko, je zavolána funkce, která z celkového skóre odečte předešlé
+hodnoty skóre v polích, kde se nově přidavší políčko vyskytuje (řádku, sloupci, diagonále a obrácené diagonále),
+vypočítá nové hodnoty skóre v těch samých polích, načež je přičte k celkovému skóre.</p>
 <p>Jedna z nejzásadnějších funkcí je self.calculate_score_for_part_one_direction, kde se vyhodnocuje skóre jednoho
-pole z jednoho směru, doporučuji přečíst si halvně její popis.</p>
+pole z jednoho směru, doporučuji přečíst si hlavně její popis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Proměnné<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>self.game</strong> -- hra, v níž se deska nachází</p></li>
 <li><p><strong>self.space</strong> -- počet volných míst na desce</p></li>
-<li><p><strong>self.score</strong> -- skóre desky, když je záporné deska je spíše nakloněná pro hráče X, pokud je kladná, deska je spíše nakloněna hráči O. Pokud je plus nebo mínus nekonečno, jeden z hráčů vyhrál.</p></li>
+<li><p><strong>self.score</strong> -- skóre desky, když je záporné, deska je spíše nakloněná pro hráče X, pokud je kladné, deska je spíše nakloněna hráči O. Pokud je plus, nebo mínus nekonečno, jeden z hráčů vyhrál</p></li>
 <li><p><strong>self.inherited_score</strong> -- pokud deska nevynutelně vede k vítězství jednoho z hráčů, tato proměnná bude zastávat hodnotu plus, nebo minus nekonečna, podle toho, jaký hráč na téhle desce vyhraje (počítá s tím, že oba hráči budou volit své nejlepší tahy)</p></li>
 <li><p><strong>self.field</strong> -- reprezentace desky, pole jednotlivých řádků</p></li>
 <li><p><strong>self.relevant</strong> -- množina relevantních políček</p></li>
@@ -128,17 +128,18 @@ pole z jednoho směru, doporučuji přečíst si halvně její popis.</p>
 <dt class="sig sig-object py" id="board.Board.calculate_score_for_part_one_direction">
 <span class="sig-name descname"><span class="pre">calculate_score_for_part_one_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#board.Board.calculate_score_for_part_one_direction" title="Trvalý odkaz na tuto definici">¶</a></dt>
 <dd><p>Vypočítá hodnotu skóre v jednom poli v jednom směru, proto se tato funkce na jedno konkrétní pole volá dvakrát,
-jednou s jeho normální reprezentací a podruhé s jeho převrácenou reprezentací. Jedna z nejzásadnšjích funkcí.</p>
+jednou s jeho normální reprezentací a podruhé s jeho převrácenou reprezentací. Jedna z nejzásadnějších funkcí.</p>
 <p>Za každou sekvenci prázdných míst a hledaných symbolů, která;</p>
 <ol class="arabic simple">
-<li><p>může obsahovat jedno prázdné místo na začátku nebo uprostřed řetězce hleadných znaků</p></li>
+<li><p>může obsahovat jedno prázdné místo na začátku, nebo uprostřed řetězce hleadných znaků</p></li>
 <li><p>může obsahovat až čtyři prázdná místa na konci řetězce</p></li>
 <li><p>má dohromady délku, jako požadovaná délka vítězného řetězce</p></li>
 </ol>
-<p>přičte druhou mocninu počtu hledaných znaků v sekvenci ke skóre.</p>
+<p>přičte druhou mocninu počtu hledaných znaků v sekvenci ke skóre. Řetězce, které by se přičetli pak jsou tedy
+například: .OO.., O...., O.O.., OO.OO, OOO..</p>
 <p>Důsledky tohoto algoritmu jsou:</p>
 <ol class="arabic simple">
-<li><p>ježto se přičítá druhá mocnina počtu hledaných znaků, bude minimax preferovat vytváření méňe delších řetězců, na úkor mnoho kratších</p></li>
+<li><p>ježto se přičítá druhá mocnina počtu hledaných znaků v sekvenci, bude minimax preferovat vytváření méňe delších řetězců, na úkor mnoho kratších</p></li>
 <li><p>minimax bude preferovat vytváření oboustraně otevřených pozic, jelikož se přičtou do skóre dvakrát.</p></li>
 <li><p>pozice uzavřené z obou stran se nepřičtou vůbec</p></li>
 </ol>
@@ -298,7 +299,6 @@ se nacházejí v bezprostřední blízkosti již položených políček).</p>
 
 
 <h3>Navigace</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">piskvorky</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="UI.html">UI module</a></li>

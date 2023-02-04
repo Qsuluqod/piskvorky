@@ -66,7 +66,7 @@ class Game:
     def player_turn(self, player: bool) -> (int, int):
 
         """
-        Zjistí, kam chce hrát hráč.
+        Zjistí, kam chce hrát lidský hráč.
 
         :param player: True - hráč hraje s O, False - hráč hraje s X
         :return: x, y souřadnice hráčova tahu

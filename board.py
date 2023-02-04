@@ -17,23 +17,23 @@ class Board:
     Další důležitá struktura je self.relevant, tam jsou uložena políčka, která jsou v bezprostřední blízkosti již
     položených políček, tato struktura slouží k tomu, aby minimax nemusel zkoušet všechna políčka, ale pouze ta v
     bezprostřední blízkosti již položených políček. self.relevant je množina a ne seznam, což zaručuje, že minimax,
-    pracující s toutu strukturou nebude deterministický, jelikož si tuto množinu převádí na seznam, což není
+    pracující s toutu strukturou, nebude deterministický, jelikož si tuto množinu převádí na seznam, což není
     deterministické. Pokaždé když je přidáno nové políčko na desku, zavolá se funkce, která přehodnotí množinu
-    relevantních políček.
+    relevantních políček self.relevant.
 
     Poslední důležitá struktura je skóre. Skóre má kladnou hodnotu pokud je deska výhodnější pro hráče O a zápornou,
-    pokud je deska výhodnější pro hráče X. Pokud jeden hráč dosáhl absolutního vítězství na desce, je
-    skóre desky nekončeno. Skóre se počítá pro každý sloupec, řádek, diagonálu a obrácenou diagonálu zvlášť (viz pole
-    self.scores), po tom, co se přidá nové políčko, je zavolána funkce, která z celkového skóre odečte předešlé hodnoty
-    skóre v polích, kde se nově přidavší políčko vyskytuje (řádku, sloupci, diagonále a obrácené diagonále), vypočítá
-    nové hodnoty skóre v těch samých polích, načež je přičte k celkovému skóre.
+    pokud je deska výhodnější pro hráče X. Pokud jeden hráč dosáhl absolutního vítězství na desce, je skóre desky
+    plus nebo mínus nekončeno. Skóre se počítá pro každý sloupec, řádek, diagonálu a obrácenou diagonálu zvlášť (viz
+    pole self.scores), po tom, co se přidá nové políčko, je zavolána funkce, která z celkového skóre odečte předešlé
+    hodnoty skóre v polích, kde se nově přidavší políčko vyskytuje (řádku, sloupci, diagonále a obrácené diagonále),
+    vypočítá nové hodnoty skóre v těch samých polích, načež je přičte k celkovému skóre.
 
     Jedna z nejzásadnějších funkcí je self.calculate_score_for_part_one_direction, kde se vyhodnocuje skóre jednoho
     pole z jednoho směru, doporučuji přečíst si hlavně její popis.
 
     :var self.game: hra, v níž se deska nachází
     :var self.space: počet volných míst na desce
-    :var self.score: skóre desky, když je záporné deska je spíše nakloněná pro hráče X, pokud je kladná, deska je spíše nakloněna hráči O. Pokud je plus nebo mínus nekonečno, jeden z hráčů vyhrál.
+    :var self.score: skóre desky, když je záporné, deska je spíše nakloněná pro hráče X, pokud je kladné, deska je spíše nakloněna hráči O. Pokud je plus, nebo mínus nekonečno, jeden z hráčů vyhrál
     :var self.inherited_score: pokud deska nevynutelně vede k vítězství jednoho z hráčů, tato proměnná bude zastávat hodnotu plus, nebo minus nekonečna, podle toho, jaký hráč na téhle desce vyhraje (počítá s tím, že oba hráči budou volit své nejlepší tahy)
     :var self.field: reprezentace desky, pole jednotlivých řádků
     :var self.relevant: množina relevantních políček
@@ -215,12 +215,12 @@ class Board:
 
         for seq, part in enumerate(parts):
             index = indexes[seq]
-            self.score -= self.field_score[seq][index]
+            self.score -= self.scores[seq][index]
 
-            self.field_score[seq][index] = self.calculate_score_for_part(part, True)
-            self.field_score[seq][index] -= self.calculate_score_for_part(part, False)
+            self.scores[seq][index] = self.calculate_score_for_part(part, True)
+            self.scores[seq][index] -= self.calculate_score_for_part(part, False)
 
-            self.score += self.field_score[seq][index]
+            self.score += self.scores[seq][index]
 
     def win_condition_for_one_new(self, node: Node, player: bool) -> bool:
 
@@ -309,7 +309,7 @@ class Board:
 
         """
         Vypočítá hodnotu skóre v jednom poli v jednom směru, proto se tato funkce na jedno konkrétní pole volá dvakrát,
-        jednou s jeho normální reprezentací a podruhé s jeho převrácenou reprezentací. Jedna z nejzásadnšjích funkcí.
+        jednou s jeho normální reprezentací a podruhé s jeho převrácenou reprezentací. Jedna z nejzásadnějších funkcí.
 
         Za každou sekvenci prázdných míst a hledaných symbolů, která;
 
@@ -319,7 +319,8 @@ class Board:
 
         3) má dohromady délku, jako požadovaná délka vítězného řetězce
 
-        přičte druhou mocninu počtu hledaných znaků v sekvenci ke skóre.
+        přičte druhou mocninu počtu hledaných znaků v sekvenci ke skóre. Řetězce, které by se přičetli pak jsou tedy
+        například: .OO.., O...., O.O.., OO.OO, OOO..
 
         Důsledky tohoto algoritmu jsou:
 

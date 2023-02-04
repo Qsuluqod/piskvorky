@@ -38,15 +38,26 @@
 <section id="uzivatelsky-navod">
 <h1>Uživatelský návod<a class="headerlink" href="#uzivatelsky-navod" title="Permalink to this heading">¶</a></h1>
 <p>Po spuštění skriptu main.py se v konzoli program zeptá, jaký chce uživatel hrát herní režim. Jednotlivé herní
-režimy jsou očíslovány. Po zadání příslušného čísla se spustí daný herní režim. Pokud uživatel dále v programu
-zadává souřadnice, může je zadat způsobem jaký:</p>
+režimy jsou očíslovány. Po zadání příslušného čísla se spustí daný herní režim. Herní režimy jsou pojmenovány
+přímočaře a je jasné, co jaký herní režim znamená, proto zde nejsou více popsány. Pokud uživatel je dále v programu
+vyzván k tomu, aby zadával souřadnice, musí je zadat způsobem jaký:</p>
 <ol class="loweralpha simple">
 <li><p>bude obsahovat číslo a písmeno v jakékomkoliv pořadí</p></li>
-<li><p>může obsahovat mezeru, čárku nebo nějaké další nečíselné a nepísmené znaky jako oddělovací znaky či prosté znaky navíc</p></li>
+<li><p>může obsahovat mezeru, čárku nebo nějaké další nečíselné a nepísmené znaky jako oddělovací znaky</p></li>
 </ol>
+<p>V případě zadání špatného vstupu, program vyzve uživatele k opětovnému zadání vstupu.</p>
+<p>Na konci hry, se program zeptá znovu uživatele na to, jaký chce hrát herní režim a celý program se opakuje.</p>
 </section>
-<section id="obsah">
-<h1>Obsah<a class="headerlink" href="#obsah" title="Permalink to this heading">¶</a></h1>
+<section id="schema-programu">
+<h1>Schéma programu<a class="headerlink" href="#schema-programu" title="Permalink to this heading">¶</a></h1>
+<p>Hlavní řídící struktura je třída Game, jejíž jediná instance se vytváří v třídě UI. Třída Game má svoji instanci
+třídi Board, kde je reprezentováno pole a svoji instanci třídy MiniMax. Třída Game pak sama bere vstup od hráče,
+pokud táhne hráč nebo volá MiniMax, pokud chce získat tahy počítače. Třída MiniMax si pak v každém svém volání předává
+instanci třídy Board, jako informaci o stavu hry v daném uzlu minimaxového stromu. Třídá Game pak řídí běh hry,
+kontroluje, jestli někdo nevyhrál a popřípadě ukončí hru.</p>
+</section>
+<section id="jednotlive-struktury-programu">
+<h1>Jednotlivé struktury programu<a class="headerlink" href="#jednotlive-struktury-programu" title="Permalink to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="modules.html">piskvorky</a><ul>

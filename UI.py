@@ -33,6 +33,7 @@ class UI:
                               "3 - hráč proti počátači (začíná počítač)\n"
                               "4 - hráč proti počítači (začíná hráč)\n"
                               "5 - počítač proti počítači\n"
+                              "6 - ukončit program\n"
                               "__: ")
             if game_mode == "1":
                 game.play()
@@ -44,6 +45,9 @@ class UI:
                 game.play_with_ai(ai_starts = False)
             elif game_mode == "5":
                 game.play_ai_vs_ai()
+            elif game_mode == "6":
+                print("Nashledanou")
+                break
             else:
                 print("Zadal jsi asi něco špatně, zkus to znovu")
             game.clean()

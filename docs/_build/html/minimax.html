@@ -41,7 +41,7 @@
 <p>Strktura, která za pomocí algoritmu minimax vrací tahy, které jsou pro hráče nejvýhodnější. Používá alfa beta
 prořezávání.</p>
 <p>V self.layers se ukrývá něco jako historie průchodů, pokud nějaká deska nevyhnutelně vede k vítězství jedné
-nebo druhé strany, uloží se příslušné vrstvy, tyto vrsty se pak porovnávají při průchodu minimaxem, aby minimax
+nebo druhé strany, uloží se do příslušné vrstvy, tyto vrsty se pak porovnávají při průchodu minimaxem, aby minimax
 zbytečně nemusel nějaké desky vyhodnocovat vícekrát. Každé pole v self.layer odpovídá jedné vrstvě hry, takže
 na první pozici jsou desky, kde je právě zaplněno právě jedno pole, na druhé vrstvě jsou uloženy desky, kde jsou
 zaplněna právě dvě pole atd.</p>
@@ -59,7 +59,7 @@ zaplněna právě dvě pole atd.</p>
 <dd><p>Funkce, která ze všech relevantních políček desky, vybere tu nejlepší pro zadaného hráče podle minimaxového
 algoritmu. Používá alfa beta prořezávání.</p>
 <p>Nejdříve vygeneruje všechny možné tahy podle výběru relevantních políček z dané desky. Následně je seřadí
-dle jejich statického ohodnocení a v tomto pořadí na ně volá obdobnou rekurzivní funkci.</p>
+dle jejich statického ohodnocení a v tomto pořadí na ně volá obdobnou rekurzivní funkci self.proceed_option.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parametry<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>player</strong> -- hráč, pro jakého generujeme tah</p>
@@ -74,8 +74,13 @@ dle jejich statického ohodnocení a v tomto pořadí na ně volá obdobnou reku
 <dt class="sig sig-object py" id="minimax.MiniMax.proceed_option">
 <span class="sig-name descname"><span class="pre">proceed_option</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cur_depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">board</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="board.html#board.Board" title="board.Board"><span class="pre">Board</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">switch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#minimax.MiniMax.proceed_option" title="Trvalý odkaz na tuto definici">¶</a></dt>
 <dd><p>Rekurzivní funkce, která vyhodnocuje nejlepší možnost pro danou desku. Používá se alfa beta prořezávání.</p>
-<p>Nejdříve vybere všechny relevantní možnosti, kam může táhnout z desky, poté je seřadí podle statického
-ohodnocení desek a rekurzivně zavolá tuto funkci na každou možnost v pořadí, v jakém je seřadila.</p>
+<p>Pokud dosáhla funkce svého maximálního zanoření, vrátí statické ohodnocení dané desky, jinak nejdříve vybere
+všechny relevantní možnosti, kam může táhnout z desky, poté je seřadí podle statického ohodnocení desek a
+rekurzivně zavolá tuto funkci na každou možnost v pořadí, v jakém je seřadila, hodnoty která získá z jejich
+volání si ukládá. Zároveň pro každou desku, kterou vytvoří kontroluje, jestli už daná deska nebyla vyřešena v
+historii.</p>
+<p>Až bude mít ohodnocení všech desek, vrátí minimální nebo maximální hodnotu (dle toho, jaký hráč je na tahu)
+z desek, na něž může táhnout.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parametry<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -113,7 +118,6 @@ ohodnocení desek a rekurzivně zavolá tuto funkci na každou možnost v pořad
 
 
 <h3>Navigace</h3>
-<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">piskvorky</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="UI.html">UI module</a></li>
