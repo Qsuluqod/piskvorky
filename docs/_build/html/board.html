@@ -1,0 +1,363 @@
+
+<!DOCTYPE html>
+
+<html lang="cz">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>board module &#8212; Dokumentace pro Piškvorky 4. února 2023</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Rejstřík" href="genindex.html" />
+    <link rel="search" title="Vyhledávání" href="search.html" />
+    <link rel="next" title="game module" href="game.html" />
+    <link rel="prev" title="UI module" href="UI.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-board">
+<span id="board-module"></span><h1>board module<a class="headerlink" href="#module-board" title="Permalink to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="board.Board">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">board.</span></span><span class="sig-name descname"><span class="pre">Board</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_game</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#board.Board" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Reprezentace herní desky.</p>
+<p>Jednotlivá políčka jsou uložena v atributu self.field, kde jsou uložena, tak jak se tisknou (v seznamu řádků), dále
+jsou ještě tatáž políčka uložena v atributech self.transposition, self.diagonal a self.rev_diagonal,
+v těchto strukturách jsou seřezana políčka po sloupcích, po diagonále z levého dolního rohu do pravého horního rohu
+a po diagonále z levého horního rohu do pravého dolního rohu. Takto jsou ta samá políčka uložená ve vícero
+strukturách, aby se lépe kontrolovalo, jestli nějaký hráč už třeba nedal dostatek symbolů dohromady, a tudíž
+nevyhrál.</p>
+<p>Další důležitá struktura je self.relevant, tam jsou uložena políčka, která jsou v bezprostřední blízkosti již
+položených políček, tato struktura slouží k tomu, aby minimax nemusel zkoušet všechna políčka, ale pouze ta v
+bezprostřední blízkosti již položených políček. self.relevant je množina a ne seznam, což zaručuje, že minimax,
+pracující s toutu strukturou nebude deterministický, jelikož si tuto množinu převádí na seznam, což není
+deterministické. Pokaždé když je přidáno nové políčko na desku, zavolá se funkce, která přehodnotí množinu
+relevantních políček.</p>
+<p>Poslední důležitá struktura je skóre. Skóre má kladnou hodnotu pokud je deska výhodnější pro hráče O a zápornou,
+pokud je deska výhodnější pro hráče X. Pokud jeden hráč dosáhl absolutního vítězství na desce, je
+skóre desky nekončeno. Skóre se počítá pro každý sloupec, řádek, diagonálu a obrácenou diagonálu zvlášť (viz pole
+self.scores), po tom, co se přidá nové políčko, je zavolána funkce, která z celkového skóre odečte předešlé hodnoty
+skóre v polích, kde se nově přidavší políčko vyskytuje (řádku, sloupci, diagonále a obrácené diagonále), vypočítá
+nové hodnoty skóre v těch samých polích, načež je přičte k celkovému skóre.</p>
+<p>Jedna z nejzásadnějších funkcí je self.calculate_score_for_part_one_direction, kde se vyhodnocuje skóre jednoho
+pole z jednoho směru, doporučuji přečíst si halvně její popis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Proměnné<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self.game</strong> -- hra, v níž se deska nachází</p></li>
+<li><p><strong>self.space</strong> -- počet volných míst na desce</p></li>
+<li><p><strong>self.score</strong> -- skóre desky, když je záporné deska je spíše nakloněná pro hráče X, pokud je kladná, deska je spíše nakloněna hráči O. Pokud je plus nebo mínus nekonečno, jeden z hráčů vyhrál.</p></li>
+<li><p><strong>self.inherited_score</strong> -- pokud deska nevynutelně vede k vítězství jednoho z hráčů, tato proměnná bude zastávat hodnotu plus, nebo minus nekonečna, podle toho, jaký hráč na téhle desce vyhraje (počítá s tím, že oba hráči budou volit své nejlepší tahy)</p></li>
+<li><p><strong>self.field</strong> -- reprezentace desky, pole jednotlivých řádků</p></li>
+<li><p><strong>self.relevant</strong> -- množina relevantních políček</p></li>
+<li><p><strong>self.transposition</strong> -- transpozice herní desky, pole jednotlivých sloupců</p></li>
+<li><p><strong>self.diagonal</strong> -- reprezentace diagonál desky (vedoucích z levého dolního rohu do pravého horního rohu)</p></li>
+<li><p><strong>self.rev_diagonal</strong> -- reprezentace reverzních diagonál desky (vedoucích z levého horního rohu do pravého dolního rohu)</p></li>
+<li><p><strong>self.field_score</strong> -- hodnoty dílčích skóre jednotlivých řádků</p></li>
+<li><p><strong>self.transposition_score</strong> -- hodnoty dílčích skóre jednotlivých sloupců</p></li>
+<li><p><strong>self.diagonal_score</strong> -- hodnoty dílčích skóre jednotlivých diagonál</p></li>
+<li><p><strong>self.rev_diagonal_score</strong> -- hodnoty dílčích skóre jednotlivých reverzních diagonál</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.add_symbol">
+<span class="sig-name descname"><span class="pre">add_symbol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#board.Board.add_symbol" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Přidá na desku nový symbol.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> -- řádek, na nějž přidá symbol</p></li>
+<li><p><strong>col</strong> -- sloupec, na nějž přidá symbol</p></li>
+<li><p><strong>symbol</strong> -- symbol, jenž přidá</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.calculate_score">
+<span class="sig-name descname"><span class="pre">calculate_score</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#board.Board.calculate_score" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Vypočítá skóre pro celou desku.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Vrací<span class="colon">:</span></dt>
+<dd class="field-odd"><p>skóre celé desky</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.calculate_score_for_part">
+<span class="sig-name descname"><span class="pre">calculate_score_for_part</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#board.Board.calculate_score_for_part" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Vypočítá hodnotu skóre v jednom poli.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>part</strong> -- pole, kde se vypočítá skóre</p></li>
+<li><p><strong>player</strong> -- pro jakého hráče skóre počítame</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>skóre zadaného pole</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.calculate_score_for_part_one_direction">
+<span class="sig-name descname"><span class="pre">calculate_score_for_part_one_direction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">part</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#board.Board.calculate_score_for_part_one_direction" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Vypočítá hodnotu skóre v jednom poli v jednom směru, proto se tato funkce na jedno konkrétní pole volá dvakrát,
+jednou s jeho normální reprezentací a podruhé s jeho převrácenou reprezentací. Jedna z nejzásadnšjích funkcí.</p>
+<p>Za každou sekvenci prázdných míst a hledaných symbolů, která;</p>
+<ol class="arabic simple">
+<li><p>může obsahovat jedno prázdné místo na začátku nebo uprostřed řetězce hleadných znaků</p></li>
+<li><p>může obsahovat až čtyři prázdná místa na konci řetězce</p></li>
+<li><p>má dohromady délku, jako požadovaná délka vítězného řetězce</p></li>
+</ol>
+<p>přičte druhou mocninu počtu hledaných znaků v sekvenci ke skóre.</p>
+<p>Důsledky tohoto algoritmu jsou:</p>
+<ol class="arabic simple">
+<li><p>ježto se přičítá druhá mocnina počtu hledaných znaků, bude minimax preferovat vytváření méňe delších řetězců, na úkor mnoho kratších</p></li>
+<li><p>minimax bude preferovat vytváření oboustraně otevřených pozic, jelikož se přičtou do skóre dvakrát.</p></li>
+<li><p>pozice uzavřené z obou stran se nepřičtou vůbec</p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>part</strong> -- pole, kde se vypočítá skóre.</p></li>
+<li><p><strong>player</strong> -- pro jakého hráče skóre počítáme.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>skóre jednoho pole z jednoho směru</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.calculate_score_for_player">
+<span class="sig-name descname"><span class="pre">calculate_score_for_player</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#board.Board.calculate_score_for_player" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Vypočítá hodnotu skóre na celé desce pro jednoho hráče.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>player</strong> -- pro jekého hráče skóre počítáme</p>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>celkové skóre zadaného hráče</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.compare">
+<span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">board</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#board.Board.compare" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Porovná hodnoty symbolů všech svých políček se symboly jejich ekvivalentů na jiné desce.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>board</strong> -- deska se kterou se porovnává</p>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>True nebo False podle výsledku</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.manage_relevant">
+<span class="sig-name descname"><span class="pre">manage_relevant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">row</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#board.Board.manage_relevant" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Volá se výhradně po přidání nového políčka, přehodnotí jaká políčka jsou relevantní pro minimax (jaká políčka
+se nacházejí v bezprostřední blízkosti již položených políček).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> -- řádek, kam se přidalo nové políčko</p></li>
+<li><p><strong>col</strong> -- sloupec, kam se přidalo nové políčko</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.manage_score">
+<span class="sig-name descname"><span class="pre">manage_score</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="node.html#node.Node" title="node.Node"><span class="pre">Node</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#board.Board.manage_score" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Volá se výhradně po přidání nového políčka, přepočítá skóre desky, popřípadě, jestli na desce někdo nevyhrává.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> -- políčko, které bylo přidáno</p>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.sample_field">
+<span class="sig-name descname"><span class="pre">sample_field</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#board.Board.sample_field" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Funkce je určená pouze pro debugování. Zaplní všechna políčka odlišnými čísly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Vrací<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.win_condition">
+<span class="sig-name descname"><span class="pre">win_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#board.Board.win_condition" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Zjistí, jestli jeden z hráču nevyhrál kdekoliv na desce.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>player</strong> -- hráč pro kterého se zjišťuje, jestli nevyhrál</p></li>
+<li><p><strong>length</strong> -- požadovaná délka výherní řady symbolů</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>True nebo False podle toho, jestli hráč vyhrál</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.win_condition_for_one_new">
+<span class="sig-name descname"><span class="pre">win_condition_for_one_new</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="node.html#node.Node" title="node.Node"><span class="pre">Node</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">player</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#board.Board.win_condition_for_one_new" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Zjistí, jestli hráč nevyhrál v okolí jednoho políčka.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>node</strong> -- políčko, okolo kterého se kontroluje</p></li>
+<li><p><strong>player</strong> -- hráč, pro kterého se zjišťuje, jestli nevyhrál</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>True nebo False podle toho, jestli hráč vyhrál</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="board.Board.win_condition_in_field">
+<span class="sig-name descname"><span class="pre">win_condition_in_field</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wanted</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#board.Board.win_condition_in_field" title="Trvalý odkaz na tuto definici">¶</a></dt>
+<dd><p>Zjistí, jestli se výherní kombinace nenachází v jednom poli.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parametry<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wanted</strong> -- hledaný řetězec</p></li>
+<li><p><strong>field</strong> -- pole, ve kterém hledáme</p></li>
+</ul>
+</dd>
+<dt class="field-even">Vrací<span class="colon">:</span></dt>
+<dd class="field-even"><p>True nebo False podle toho, jestli hráč vyhrál</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Piškvorky</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigace</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">piskvorky</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="UI.html">UI module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">board module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="game.html">game module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="main.html">main module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="minimax.html">minimax module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="node.html">node module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">piskvorky</a><ul>
+      <li>Previous: <a href="UI.html" title="předchozí kapitola">UI module</a></li>
+      <li>Next: <a href="game.html" title="další kapitola">game module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Rychlé vyhledávání</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="OK" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Matěj Prokopič.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 6.1.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/board.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

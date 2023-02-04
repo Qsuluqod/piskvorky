@@ -4,43 +4,70 @@ from minimax import MiniMax
 
 class Game:
 
+    """
+    Hlavní řídící struktura hry, řídí tahy hráčů a volá minimax.
+
+    Obsahuje celkem čtyři herní režimy, které jdou spustit.
+
+    :var self.switch: jaký hráč je zrovna na tahu, True - hráč O, False - hráč X
+    :var self.ext: rozměr hrací desky
+    :var self.win_count: počet políček v řadě nutných k vítězství
+    :var self.depth: hloubka hry, s každým tahem se zvětšuje o jedna (udává, kolikátý je zrovna tah)
+    :var self.X: symbol hráče X
+    :var self.O: symbol hráče O
+    :var self.empty: symbol prázdného políčka
+    :var self.board: instance hrací desky, na které se hraje
+    :var self.minimax_depth: maximální zanoření rekurzivní funkce minimaxu
+    :var self.minimax: instance minimaxu, který bude vyhodnocovat tahy počítače
+    """
+
     def __init__(self, ext: int, win_count: int, minimax_depth: int):
 
         """
-        Konstruktor hry
+        Konstruktor hry.
+
         :param ext: Rozměr hrací desky
         :param win_count: Počet políček v řadě nutných k vítězství
         :param minimax_depth: Maximální zanoření minimaxu
+        :return: None
         """
-        # True = O, False = X
+        # jaký hráč je na tahu, True = O, False = X
         self.switch = True
         self.ext = ext
         self.win_count = win_count
+        # hloubka hry
         self.depth = 0
 
+        # symbol hráče X
         self.X = "X"
+        # symbol hráče O
         self.O = "O"
+        # symbol prázdného políčka
         self.empty = " "
 
+        # hrací deska
         self.board = Board(self)
         self.minimax_depth = minimax_depth
+        # minimax
         self.minimax = MiniMax(self, minimax_depth)
 
     def clean(self):
 
         """
-        Vyčístí hru, pro novou hru.
-        :return:
+        Vyčistí herní data pro novou hru.
+
+        :return: None
         """
         self.switch = True
         self.depth = 0
         self.board = Board(self)
         self.minimax = MiniMax(self, self.minimax_depth)
 
-    def player_turn(self, player: bool):
+    def player_turn(self, player: bool) -> (int, int):
 
         """
         Zjistí, kam chce hrát hráč.
+
         :param player: True - hráč hraje s O, False - hráč hraje s X
         :return: x, y souřadnice hráčova tahu
         """
@@ -72,11 +99,12 @@ class Game:
 
         return row, col
 
-    def play(self):
+    def play(self) -> None:
 
         """
-        Zapne hru háče proti hráči.
-        :return:
+        Zapne hru hráče proti hráči.
+
+        :return: None
         """
         self.switch = True
         while True:
@@ -88,11 +116,12 @@ class Game:
                 break
             self.end_turn()
 
-    def play_ai_vs_ai(self):
+    def play_ai_vs_ai(self) -> None:
 
         """
-        Zapnu hru počítače proti počítači.
-        :return:
+        Zapne hru počítače proti počítači.
+
+        :return: None
         """
         self.switch = True
         while True:
@@ -104,12 +133,13 @@ class Game:
                 break
             self.end_turn()
 
-    def play_with_ai(self, ai_starts=True):
+    def play_with_ai(self, ai_starts=True) -> None:
 
         """
         Zapne hru hráče proti počátači.
+
         :param ai_starts: True - Začíná počátač, False - Začíná hráč
-        :return:
+        :return: None
         """
         self.switch = True
         while True:
@@ -133,11 +163,12 @@ class Game:
                 break
             self.end_turn()
 
-    def play_without_switch(self):
+    def play_without_switch(self) -> None:
 
         """
         Zapne hru, kde hraje jenom jeden hráč a pokládá jenom kolečka, slouží pouze pro debugování.
-        :return:
+
+        :return: None
         """
         self.switch = True
         while True:
@@ -148,19 +179,22 @@ class Game:
                 break
             self.depth += 1
 
-    def end_turn(self):
+    def end_turn(self) -> None:
 
         """
-        Udělá údržbu konce tahu.
-        :return:
+        Vykoná údržbu konce tahu.
+
+        :return: None
         """
         self.switch = not self.switch
         self.depth += 1
 
-    def check_end(self):
+    def check_end(self) -> None:
 
         """
-        Zkontroluje, jestli na desce nevyhrál hráč, co byl na tahu nebo na desce už nezbývá žádné místo.
+        Zkontroluje, jestli na desce nevyhrál hráč, jenž byl na tahu, popřípadě jestli na desce už nezbývá žádné místo.
+        V případě konce hry vytiskne do konzole závěrečnou frázi.
+
         :return: True - hra už skončila, False - hra ještě neskončila
         """
         # vyhrál hráč na tahu
