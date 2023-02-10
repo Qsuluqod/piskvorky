@@ -30,7 +30,7 @@ class UI:
             game_mode = input("Vyber, jakým způsobem chceš hrát:\n"
                               "1 - hráč proti hráči\n"
                               "2 - hráč sám se sebou\n"
-                              "3 - hráč proti počátači (začíná počítač)\n"
+                              "3 - hráč proti počítači (začíná počítač)\n"
                               "4 - hráč proti počítači (začíná hráč)\n"
                               "5 - počítač proti počítači\n"
                               "6 - ukončit program\n"

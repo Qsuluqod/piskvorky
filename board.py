@@ -313,7 +313,7 @@ class Board:
 
         Za každou sekvenci prázdných míst a hledaných symbolů, která;
 
-        1) může obsahovat jedno prázdné místo na začátku, nebo uprostřed řetězce hleadných znaků
+        1) může obsahovat jedno prázdné místo na začátku, nebo uprostřed řetězce hledaných znaků
 
         2) může obsahovat až čtyři prázdná místa na konci řetězce
 
@@ -324,11 +324,11 @@ class Board:
 
         Důsledky tohoto algoritmu jsou:
 
-        1) ježto se přičítá druhá mocnina počtu hledaných znaků v sekvenci, bude minimax preferovat vytváření méňe delších řetězců, na úkor mnoho kratších
+        1) ježto se přičítá druhá mocnina počtu hledaných znaků v sekvenci, bude minimax preferovat vytváření méňe delších řetězců, na úkor mnoha kratších
 
         2) minimax bude preferovat vytváření oboustraně otevřených pozic, jelikož se přičtou do skóre dvakrát.
 
-        3) pozice uzavřené z obou stran se nepřičtou vůbec
+        3) pozice uzavřené z obou stran (XOOOX) se nepřičtou vůbec
 
         :param part: pole, kde se vypočítá skóre.
         :param player: pro jakého hráče skóre počítáme.

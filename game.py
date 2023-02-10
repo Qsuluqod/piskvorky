@@ -96,6 +96,7 @@ class Game:
                 continue
             if self.board.field[row][col].symbol != self.empty:
                 print("Toto pole už je zabrané!")
+                row = self.ext
 
         return row, col
 
@@ -150,10 +151,10 @@ class Game:
                 if self.switch:
                     row, col = self.minimax.choose_option(True)
                 else:
-                    row, col = self.player_turn(True)
+                    row, col = self.player_turn(False)
             else:
                 if self.switch:
-                    row, col = self.player_turn(False)
+                    row, col = self.player_turn(True)
                 else:
                     row, col = self.minimax.choose_option(False)
 
@@ -189,7 +190,7 @@ class Game:
         self.switch = not self.switch
         self.depth += 1
 
-    def check_end(self) -> None:
+    def check_end(self) -> bool:
 
         """
         Zkontroluje, jestli na desce nevyhrál hráč, jenž byl na tahu, popřípadě jestli na desce už nezbývá žádné místo.
